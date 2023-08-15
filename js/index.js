@@ -16,44 +16,61 @@ let searchInput = document.getElementById("searchInput");
 let nextUpCountElement = document.getElementById("nextUpCount");
 let inProgressCountElement = document.getElementById("inProgressCount");
 let doneCountEmelent = document.getElementById("doneCount");
+let cancelAlert = document.getElementById("cancelAlert");
+let alertContainer = document.querySelector(".alert-container");
+
 let container = {
   nextUp: document.getElementById("toDo"),
   inProgress: document.getElementById("inProgress"),
   done: document.getElementById("done"),
 };
 
-
-
 // todo ===============================================================> app variables
 let tasksArray = JSON.parse(localStorage.getItem("tasks")) || [];
 let updateIndex = 0;
 
-
 for (let i = 0; i < tasksArray.length; i++) {
   displayTasks(i);
 }
+
+let titleRegex = /^[a-z]{3,8}$/;
+let descriptionRegex = /^[a-z]{3,8}$/;
 // todo ==================================================================> functions
 function showModal() {
   modal.classList.replace("d-none", "d-flex");
+  document.body.style.overflow = "hidden";
+  scroll({
+    top: 0,
+    behavior: "smooth",
+  });
 }
 function hideModal() {
   modal.classList.replace("d-flex", "d-none");
   clearValuesFromInput();
+  document.body.style.overflow = "visible";
 }
 function addTask() {
-  let tast = {
-    status: status.value,
-    category: category.value,
-    title: title.value,
-    description: description.value,
-  };
-  tasksArray.push(tast);
-  localStorage.setItem("tasks", JSON.stringify(tasksArray));
-  displayTasks(tasksArray.length - 1);
-  hideModal();
-  clearValuesFromInput();
+  if (
+    valaidation(titleRegex, title) == true &&
+    valaidation(descriptionRegex, description) == true
+  ) {
+    let tast = {
+      status: status.value,
+      category: category.value,
+      title: title.value,
+      description: description.value,
+    };
+    tasksArray.push(tast);
+    localStorage.setItem("tasks", JSON.stringify(tasksArray));
+    displayTasks(tasksArray.length - 1);
+    hideModal();
+    clearValuesFromInput();
+    title.classList.remove("is-valid");
+    description.classList.remove("is-valid");
+  } else {
+    alertContainer.classList.remove("d-none");
+  }
 }
-
 
 function displayTasks(index) {
   let taskHtml = `
@@ -68,15 +85,18 @@ function displayTasks(index) {
       </ul>
     </div>
   `;
-
   container[tasksArray[index].status].innerHTML += taskHtml;
   updateTaskCounts();
 }
 
 function updateTaskCounts() {
-let nextUpCount = tasksArray.filter(task => task.status === "nextUp").length
-let inProgressCount = tasksArray.filter(task => task.status ==="inProgress").length
-let doneCount =tasksArray.filter(task=>task.status ==="done").length
+  let nextUpCount = tasksArray.filter(
+    (task) => task.status === "nextUp"
+  ).length;
+  let inProgressCount = tasksArray.filter(
+    (task) => task.status === "inProgress"
+  ).length;
+  let doneCount = tasksArray.filter((task) => task.status === "done").length;
   nextUpCountElement.innerHTML = nextUpCount;
   inProgressCountElement.innerHTML = inProgressCount;
   doneCountEmelent.innerHTML = doneCount;
@@ -135,7 +155,7 @@ function emptyContainers() {
   }
 }
 function clearValuesFromInput() {
-  status.value = "nextUp"
+  status.value = "nextUp";
   category.value = "education";
   title.value = "";
   description.value = "";
@@ -201,6 +221,18 @@ function resetTasksContainer() {
   container.done.innerHTML = "";
 }
 
+function valaidation(regex, element) {
+  if (regex.test(element.value)) {
+    element.parentElement.nextElementSibling.classList.add("d-none");
+
+    return true;
+  } else {
+    element.parentElement.nextElementSibling.classList.remove("d-none");
+
+    return false;
+  }
+}
+
 // todo =======================================================================================> Events
 addbtn.addEventListener("click", showModal);
 
@@ -224,3 +256,27 @@ barsBtn.addEventListener("click", changeDisplayToRow);
 gridBtn.addEventListener("click", changeDisplayToCol);
 
 searchInput.addEventListener("input", searchTask);
+
+title.addEventListener("input", () => {
+  if (valaidation(titleRegex, title) == true) {
+    title.classList.add("is-valid");
+    title.classList.remove("is-invalid");
+    document.querySelector(".alertTitle").classList.add("d-none");
+  } else {
+    title.classList.add("is-invalid");
+    title.classList.remove("is-valid");
+    document.querySelector(".alertTitle").classList.remove("d-none");
+  }
+});
+
+description.addEventListener("input", () => {
+  if (valaidation(descriptionRegex, description) == true) {
+    description.classList.add("is-valid");
+    description.classList.remove("is-invalid");
+    document.querySelector(".alertDescription").classList.add("d-none");
+  } else {
+    description.classList.add("is-invalid");
+    description.classList.remove("is-valid");
+    document.querySelector(".alertDescription").classList.remove("d-none");
+  }
+});
